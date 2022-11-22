@@ -46,6 +46,17 @@ async function run() {
     const usersCollection = client.db("doctorPortal").collection("usersData");
     const doctorsCollection = client.db("doctorPortal").collection("doctors");
 
+    //note: verifyAdmin after verifyJWT
+    const verifyAdmin = async (req, res, next) => {
+      const decodedEmail = req.decoded.email;
+      const query = { email: decodedEmail };
+      const user = await usersCollection.findOne(query);
+      if (user.role !== "admin") {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      next();
+    };
+
     //get method for get appointments
     app.get("/appointments", async (req, res) => {
       const date = req.query.date;
@@ -149,14 +160,7 @@ async function run() {
     });
 
     //put method for upsert and make admin
-    app.put("/users/admin/:id", verifyJWT, async (req, res) => {
-      const decodedEmail = req.decoded.email;
-      const query = { email: decodedEmail };
-      const user = await usersCollection.findOne(query);
-      if (user.role !== "admin") {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-
+    app.put("/users/admin/:id", verifyJWT, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: ObjectId(id) };
       const options = { upsert: true };
@@ -174,17 +178,25 @@ async function run() {
     });
 
     //post method for doctors
-    app.post("/doctors", async (req, res) => {
+    app.post("/doctors", verifyJWT, verifyAdmin, async (req, res) => {
       const doctor = req.body;
       const result = await doctorsCollection.insertOne(doctor);
       res.send(result);
     });
 
     //get doctors data by get mehtod
-    app.get("/doctors", async (req, res) => {
+    app.get("/doctors", verifyJWT, verifyAdmin, async (req, res) => {
       const query = {};
       const doctors = await doctorsCollection.find(query).toArray();
       res.send(doctors);
+    });
+
+    //delete doctors by id
+    app.delete("/doctors/:id", verifyJWT, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: ObjectId(id) };
+      const result = await doctorsCollection.deleteOne(filter);
+      res.send(result);
     });
   } finally {
   }
