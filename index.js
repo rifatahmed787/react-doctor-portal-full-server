@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const stripe = require("stripe")(process.env.STRIPE_KEY);
@@ -18,6 +19,42 @@ const client = new MongoClient(uri, {
   useUnifiedTopology: true,
   serverApi: ServerApiVersion.v1,
 });
+
+//function for sending email for booking confirmation
+function sendBookingEamil(booking) {
+  //distructuring booking
+  const { email, treatment, slot, selectedDate } = booking;
+  let transporter = nodemailer.createTransport({
+    host: "smtp.sendgrid.net",
+    port: 587,
+    auth: {
+      user: "rifat",
+      pass: process.env.SENDGRID_API_KEY,
+    },
+  });
+
+  transporter.sendMail(
+    {
+      from: "mdrifatahmed787@gmail.com", // verified sender email
+      to: email || "mdrifatahmed787@gmail.com", // recipient email
+      subject: `Your appointment for ${treatment} is confirmed`, // Subject line
+      text: "Hello world!", // plain text body
+      html: `
+      <h3>Your appointment on ${slot} is confirmed</h3>
+      <p>Thank you for your appointment</p>
+      <p>Stay connect with us</p>
+      
+      `, // html body
+    },
+    function (error, info) {
+      if (error) {
+        console.log(error);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    }
+  );
+}
 
 //jwt middleware function
 function verifyJWT(req, res, next) {
@@ -105,7 +142,7 @@ async function run() {
       res.send(bookings);
     });
 
-    //get method for bookings by id
+    //get method for bookings by id for payment
     app.get("/bookings/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
@@ -135,6 +172,8 @@ async function run() {
         return res.send({ acknowledged: false, message });
       }
       const result = await bookingsCollection.insertOne(booking);
+      //send email for appointment confirmation
+      sendBookingEamil(booking);
       res.send(result);
     });
 
