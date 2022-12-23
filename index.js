@@ -21,40 +21,40 @@ const client = new MongoClient(uri, {
 });
 
 //function for sending email for booking confirmation
-function sendBookingEamil(booking) {
-  //distructuring booking
-  const { email, treatment, slot, selectedDate } = booking;
-  let transporter = nodemailer.createTransport({
-    host: "smtp.sendgrid.net",
-    port: 587,
-    auth: {
-      user: "rifat",
-      pass: process.env.SENDGRID_API_KEY,
-    },
-  });
+// function sendBookingEamil(booking) {
+//  distructuring booking
+//   const { email, treatment, slot, selectedDate } = booking;
+//   let transporter = nodemailer.createTransport({
+//     host: "smtp.sendgrid.net",
+//     port: 587,
+//     auth: {
+//       user: "rifat",
+//       pass: process.env.SENDGRID_API_KEY,
+//     },
+//   });
 
-  transporter.sendMail(
-    {
-      from: "mdrifatahmed787@gmail.com", // verified sender email
-      to: email || "mdrifatahmed787@gmail.com", // recipient email
-      subject: `Your appointment for ${treatment} is confirmed`, // Subject line
-      text: "Hello world!", // plain text body
-      html: `
-      <h3>Your appointment on ${slot} is confirmed</h3>
-      <p>Thank you for your appointment</p>
-      <p>Stay connect with us</p>
-      
-      `, // html body
-    },
-    function (error, info) {
-      if (error) {
-        console.log(error);
-      } else {
-        console.log("Email sent: " + info.response);
-      }
-    }
-  );
-}
+//   transporter.sendMail(
+//     {
+//       from: "mdrifatahmed787@gmail.com", // verified sender email
+//       to: email || "mdrifatahmed787@gmail.com", // recipient email
+//       subject: `Your appointment for ${treatment} is confirmed`, // Subject line
+//       text: "Hello world!", // plain text body
+//       html: `
+//       <h3>Your appointment on ${slot} is confirmed</h3>
+//       <p>Thank you for your appointment</p>
+//       <p>Stay connect with us</p>
+
+//       `, // html body
+//     },
+//     function (error, info) {
+//       if (error) {
+//         console.log(error);
+//       } else {
+//         console.log("Email sent: " + info.response);
+//       }
+//     }
+//   );
+// }
 
 //jwt middleware function
 function verifyJWT(req, res, next) {
